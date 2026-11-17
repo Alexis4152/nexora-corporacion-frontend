@@ -164,18 +164,19 @@ function PlanModal({ plan, productId, onClose, onDone }) {
   const [f, setF] = useState(plan ? { ...plan, features: plan.features.join('\n'), maxUsers: plan.maxUsers ?? '', maxBranches: plan.maxBranches ?? '', trialDays: plan.trialDays ?? '' }
     : { productId, code: '', name: '', description: '', features: '', maxUsers: '', maxBranches: '', trialDays: '', highlighted: false, custom: false, active: true, sortOrder: 0, prices: { MONTHLY: '', ANNUAL: '' }, taxIncluded: false })
   const [busy, setBusy] = useState(false)
+  const [errors, setErrors] = useState({})
   const submit = async () => {
-    setBusy(true)
+    setBusy(true); setErrors({})
     const body = { ...f, productId: plan?.productId || productId, features: f.features.split('\n').map((x) => x.trim()).filter(Boolean), usageLimits: plan?.usageLimits || {},
       maxUsers: f.maxUsers ? Number(f.maxUsers) : null, maxBranches: f.maxBranches ? Number(f.maxBranches) : null, trialDays: f.trialDays === '' ? null : Number(f.trialDays),
       prices: plan ? undefined : Object.entries(f.prices).filter(([, v]) => v !== '').map(([k, v]) => ({ billingPeriod: k, amount: v, taxIncluded: f.taxIncluded })) }
-    try { plan ? await catalogApi.updatePlan(plan.id, body) : await catalogApi.createPlan(body); toast.success('Plan guardado'); onDone() } catch (e) { toast.error(errorMessage(e)) } finally { setBusy(false) }
+    try { plan ? await catalogApi.updatePlan(plan.id, body) : await catalogApi.createPlan(body); toast.success('Plan guardado'); onDone() } catch (e) { setErrors(fieldErrors(e)); toast.error(errorMessage(e)) } finally { setBusy(false) }
   }
   return (
     <Modal open onClose={onClose} title={plan ? `Editar plan ${plan.name}` : 'Nuevo plan'} size="max-w-2xl" footer={<><button className="btn-secondary" onClick={onClose}>Cancelar</button><Button loading={busy} onClick={submit}>Guardar</Button></>}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="Código" value={f.code} disabled={!!plan} onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '') })} />
-        <Input label="Nombre" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+        <Input label="Código" value={f.code} disabled={!!plan} error={errors.code} hint={!plan && !errors.code ? 'Empieza con letra. Ej.: POS_BASICO' : undefined} placeholder="POS_BASICO" onChange={(e) => setF({ ...f, code: e.target.value.toUpperCase().replace(/[^A-Z0-9_]/g, '') })} />
+        <Input label="Nombre" value={f.name} error={errors.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
         <Textarea label="Descripción" wrapClass="sm:col-span-2" rows={2} value={f.description || ''} onChange={(e) => setF({ ...f, description: e.target.value })} />
         <Textarea label="Características (una por línea)" wrapClass="sm:col-span-2" rows={4} value={f.features} onChange={(e) => setF({ ...f, features: e.target.value })} />
         <Input label="Usuarios permitidos" value={f.maxUsers} onChange={(e) => setF({ ...f, maxUsers: e.target.value.replace(/\D/g, '') })} placeholder="Ilimitados" />

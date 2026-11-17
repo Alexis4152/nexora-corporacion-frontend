@@ -233,8 +233,10 @@ function CollectionsTab({ customer, money: m, onChange }) {
   const { can } = useAuth()
   const { users } = useCatalog()
   const toast = useToast()
-  const statement = useAsync(() => (can('charges.read') ? customersApi.statement(customer.id) : Promise.resolve(null)), [customer.id])
-  const charges = useAsync(() => (can('charges.read') ? billingApi.charges({ customerId: customer.id, size: 100 }) : Promise.resolve(null)), [customer.id])
+  // `m` cambia cada vez que se recarga el resumen del cliente (p. ej. tras registrar un pago): así cargos y estado de
+  // cuenta se vuelven a pedir y no quedan desfasados respecto a los totales de arriba.
+  const statement = useAsync(() => (can('charges.read') ? customersApi.statement(customer.id) : Promise.resolve(null)), [customer.id, m])
+  const charges = useAsync(() => (can('charges.read') ? billingApi.charges({ customerId: customer.id, size: 100 }) : Promise.resolve(null)), [customer.id, m])
   const actions = useAsync(() => (can('collections.read') ? billingApi.actions({ customerId: customer.id }) : Promise.resolve([])), [customer.id])
   const [form, setForm] = useState(null)
   const save = async () => {

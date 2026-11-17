@@ -360,15 +360,19 @@ export function DescList({ items, cols = 2 }) {
 
 /* ── Modal y panel lateral ─────────────────────────────────────────────────── */
 function useOverlay(open, onClose, ref) {
+  // onClose suele llegar como función nueva en cada render: se guarda en un ref para que el efecto solo corra al
+  // abrir. Si dependiera de onClose, cada tecla re-ejecutaría el efecto y devolvería el foco al primer campo.
+  const closeRef = useRef(onClose)
+  closeRef.current = onClose
   useEffect(() => {
     if (!open) return undefined
-    const onKey = (e) => e.key === 'Escape' && onClose?.()
+    const onKey = (e) => e.key === 'Escape' && closeRef.current?.()
     document.addEventListener('keydown', onKey)
     const prev = document.body.style.overflow
     document.body.style.overflow = 'hidden'
-    setTimeout(() => ref.current?.querySelector('[autofocus],input:not([type=hidden]),select,textarea')?.focus(), 30)
-    return () => { document.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
-  }, [open, onClose, ref])
+    const t = setTimeout(() => ref.current?.querySelector('[autofocus],input:not([type=hidden]):not([disabled]),select,textarea')?.focus(), 30)
+    return () => { clearTimeout(t); document.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
+  }, [open, ref])
 }
 
 export function Modal({ open, onClose, title, description, children, footer, size = 'max-w-lg', icon: Icon }) {
