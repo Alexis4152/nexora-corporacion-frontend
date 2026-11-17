@@ -50,7 +50,7 @@ export const DOC_CATEGORY = { CONTRACT: 'Contrato', RECEIPT: 'Comprobante', QUOT
 export const ROLE_NAMES = { SUPER_ADMIN: 'Super administrador', ADMINISTRADOR: 'Administrador', FINANZAS: 'Finanzas', VENTAS: 'Ventas', SOPORTE: 'Soporte', AUDITOR: 'Auditor' }
 export const MOVEMENTS = { NEW: ['New', 'green'], EXPANSION: ['Expansion', 'brand'], CONTRACTION: ['Contraction', 'amber'], CHURN: ['Churn', 'red'], REACTIVATION: ['Reactivation', 'sky'], NONE: ['—', 'slate'] }
 export const EVENT_TYPES = {
-  CREATED: 'Alta', ACTIVATED: 'Activación', TRIAL_CONVERTED: 'Prueba convertida', TRIAL_EXPIRED: 'Prueba expirada', RENEWED: 'Renovación',
+  CREATED: 'Alta', ACTIVATED: 'Activación', TRIAL_CONVERTED: 'Prueba convertida', TRIAL_EXPIRED: 'Prueba expirada', TRIAL_EXTENDED: 'Prueba extendida', RENEWED: 'Renovación',
   PLAN_CHANGED: 'Cambio de plan', PLAN_CHANGE_SCHEDULED: 'Cambio programado', PLAN_CHANGE_CANCELLED: 'Cambio programado cancelado',
   DISCOUNT_CHANGED: 'Descuento', SUSPENDED: 'Suspensión', AUTO_SUSPENDED: 'Suspensión automática', REACTIVATED: 'Reactivación',
   CANCEL_SCHEDULED: 'Cancelación programada', CANCEL_REVERTED: 'Cancelación revertida', CANCELLED: 'Cancelación', EXPIRED: 'Expiración',

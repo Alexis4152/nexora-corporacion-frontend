@@ -116,6 +116,7 @@ export const subscriptionsApi = {
   create: (b) => post('/subscriptions', b),
   activate: (id) => post(`/subscriptions/${id}/activate`),
   convertTrial: (id) => post(`/subscriptions/${id}/convert-trial`),
+  extendTrial: (id, b) => post(`/subscriptions/${id}/extend-trial`, b),
   changePlan: (id, b) => post(`/subscriptions/${id}/change-plan`, b),
   cancelPending: (id) => post(`/subscriptions/${id}/cancel-pending-change`),
   discount: (id, b) => post(`/subscriptions/${id}/discount`, b),

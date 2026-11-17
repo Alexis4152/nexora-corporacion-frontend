@@ -61,6 +61,7 @@ export default function SubscriptionPage() {
           <div className="mt-6 flex flex-wrap gap-2">
             {act('ACTIVATE') && can('subscriptions.create') && <Button onClick={() => run(() => subscriptionsApi.activate(id), 'Suscripción activada')} loading={busy}><Play className="h-4 w-4" />Activar ahora</Button>}
             {act('CONVERT_TRIAL') && can('subscriptions.update') && <Button variant="accent" onClick={() => setModal('convert')}><Sparkles className="h-4 w-4" />Convertir a plan pagado</Button>}
+            {act('EXTEND_TRIAL') && can('subscriptions.update') && <button className="btn-secondary" onClick={() => setModal('extend')}><CalendarClock className="h-4 w-4" />Extender prueba</button>}
             {act('CHANGE_PLAN') && can('subscriptions.update') && <button className="btn-secondary" onClick={() => setModal('plan')}><TrendingUp className="h-4 w-4" />Cambiar plan</button>}
             {act('DISCOUNT') && can('subscriptions.update') && <button className="btn-secondary" onClick={() => setModal('discount')}><Gift className="h-4 w-4" />Descuento</button>}
             {act('RENEW') && can('subscriptions.update') && <button className="btn-secondary" onClick={() => run(() => subscriptionsApi.renew(id), 'Renovación confirmada')}><RotateCcw className="h-4 w-4" />Confirmar renovación</button>}
@@ -136,6 +137,7 @@ export default function SubscriptionPage() {
       <DiscountModal open={modal === 'discount'} onClose={() => setModal(null)} busy={busy} onSubmit={(b) => run(() => subscriptionsApi.discount(id, b), 'Descuento actualizado')} />
       <CancelModal open={modal === 'cancel'} onClose={() => setModal(null)} s={s} busy={busy} canWaive={can('charges.void')} onSubmit={(b) => run(() => subscriptionsApi.cancel(id, b), 'Cancelación registrada')} />
       <TermsModal open={modal === 'terms'} onClose={() => setModal(null)} d={d} busy={busy} onSubmit={(b) => run(() => subscriptionsApi.terms(id, b), 'Condiciones actualizadas')} />
+      <ExtendTrialModal open={modal === 'extend'} onClose={() => setModal(null)} s={s} busy={busy} onSubmit={(b) => run(() => subscriptionsApi.extendTrial(id, b), 'Prueba gratuita extendida')} />
       <SellerModal open={modal === 'seller'} onClose={() => setModal(null)} s={s} users={users} busy={busy} onSubmit={(b) => run(() => subscriptionsApi.seller(id, b), 'Vendedor actualizado')} />
       <ConfirmDialog open={modal === 'suspend'} title="Suspender suscripción" tone="danger" confirmLabel="Suspender" reasonLabel="Motivo de la suspensión" loading={busy}
         message="Se retira del MRR hasta que se reactive. No suspende el sistema del cliente: eso lo decide cada producto con su política." onClose={() => setModal(null)}
@@ -222,6 +224,28 @@ function CancelModal({ open, onClose, s, busy, canWaive, onSubmit }) {
         <Textarea label="Detalle" value={f.detail} onChange={(e) => setF({ ...f, detail: e.target.value })} rows={2} maxLength={500} />
         {mode === 'IMMEDIATE' && canWaive && Number(s.overdueAmount) > 0 && <Checkbox checked={f.waiveOpenBalance} onChange={(v) => setF({ ...f, waiveOpenBalance: v })} label={`Condonar el saldo pendiente (${money(s.overdueAmount)} vencido)`} description="Queda registrado como ajuste auditado. Requiere confirmar tu contraseña." />}
       </div>
+    </Modal>
+  )
+}
+
+function ExtendTrialModal({ open, onClose, s, busy, onSubmit }) {
+  const [f, setF] = useState(null)
+  const plusDays = (iso, n) => { const d = new Date(`${iso}T12:00:00`); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10) }
+  useEffect(() => { setF(open && s.trialEndsOn ? { trialEndsOn: plusDays(s.trialEndsOn, 15), reason: '' } : null) }, [open]) // eslint-disable-line
+  return (
+    <Modal open={open && !!f} onClose={onClose} title="Extender prueba gratuita" icon={CalendarClock} size="max-w-md"
+      footer={<><button className="btn-secondary" onClick={onClose}>Cancelar</button><Button loading={busy} disabled={!f?.trialEndsOn} onClick={() => onSubmit(f)}>Extender</Button></>}>
+      {f && (
+        <div className="space-y-4">
+          <p className="text-sm muted">Fin de prueba actual: <b>{date(s.trialEndsOn)}</b></p>
+          <div className="flex flex-wrap gap-2">
+            {[7, 15, 30].map((n) => <button type="button" key={n} className="btn-secondary btn-sm" onClick={() => setF({ ...f, trialEndsOn: plusDays(s.trialEndsOn, n) })}>+{n} días</button>)}
+          </div>
+          <Input label="Nueva fecha de fin de prueba" type="date" value={f.trialEndsOn} min={plusDays(s.trialEndsOn, 1)} onChange={(e) => setF({ ...f, trialEndsOn: e.target.value })} />
+          <Input label="Motivo" value={f.reason} onChange={(e) => setF({ ...f, reason: e.target.value })} maxLength={300} placeholder="El cliente sigue evaluando, capacitación pendiente…" />
+          <p className="text-xs muted">No genera cargos ni cambia el MRR. Si la prueba ya había expirado, vuelve a quedar en prueba. Queda en el historial y en la auditoría.</p>
+        </div>
+      )}
     </Modal>
   )
 }
